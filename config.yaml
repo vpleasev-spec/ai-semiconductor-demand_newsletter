@@ -1,0 +1,68 @@
+project:
+  title: "AI Demand Monitoring"
+  language: "ko"
+  lookback_hours: 96
+  max_articles_per_topic: 5
+  max_total_articles: 40
+  history_limit: 3000
+
+summary:
+  model: "claude-3-5-haiku-latest"
+  max_tokens: 1200
+
+email:
+  subject_prefix: "[AI Demand Monitoring]"
+
+categories:
+  - name: "수요"
+    topics:
+      - name: "AI 토큰 사용량"
+        queries:
+          - '"AI token usage" OR "token consumption" OR "inference tokens"'
+          - '"API usage" AND (OpenAI OR Anthropic OR Gemini OR Claude)'
+      - name: "AI 모델 업체 실적 전망"
+        queries:
+          - '(OpenAI OR Anthropic OR xAI OR Cohere) AND (revenue OR forecast OR earnings OR outlook)'
+          - '"AI model company" AND (revenue OR profitability OR funding)'
+      - name: "신규 AI 모델 출시"
+        queries:
+          - '"new AI model" OR "model launch" OR "foundation model release"'
+          - '(OpenAI OR Anthropic OR Google DeepMind OR Meta OR xAI) AND (launch OR release OR unveil)'
+
+  - name: "플랫폼"
+    topics:
+      - name: "서버 OEM DRAM 재고"
+        queries:
+          - 'server OEM DRAM inventory'
+          - '(Dell OR HPE OR Lenovo OR Supermicro) AND (DRAM inventory OR memory inventory)'
+      - name: "Hyperscaler CapEx / FCF"
+        queries:
+          - '(Microsoft OR Google OR Amazon OR Meta) AND (capex OR capital expenditure OR free cash flow)'
+          - 'hyperscaler AI capex FCF'
+      - name: "Hyperscaler 신용등급"
+        queries:
+          - '(Microsoft OR Alphabet OR Amazon OR Meta) AND (credit rating OR debt rating OR outlook)'
+          - 'hyperscaler credit rating'
+      - name: "GPU Rental Price"
+        queries:
+          - 'GPU rental price H100 H200 B200'
+          - '(CoreWeave OR Lambda OR Crusoe OR Nebius) AND (GPU pricing OR rental price)'
+
+  - name: "인프라 및 환경"
+    topics:
+      - name: "전력 수급"
+        queries:
+          - 'AI data center power supply grid electricity'
+          - 'data center electricity shortage power capacity'
+      - name: "메모리(HBM/DRAM/NAND) 수급"
+        queries:
+          - '(HBM OR DRAM OR NAND) AND (supply demand shortage pricing)'
+          - 'AI memory supply HBM DRAM NAND'
+      - name: "파운드리 수급"
+        queries:
+          - '(TSMC OR Samsung Foundry OR Intel Foundry) AND (capacity utilization supply demand)'
+          - 'advanced node foundry capacity AI chips'
+      - name: "ABF 기판 / MLCC 수급"
+        queries:
+          - '(ABF substrate OR MLCC) AND (supply demand shortage pricing)'
+          - 'AI server ABF substrate MLCC supply'
