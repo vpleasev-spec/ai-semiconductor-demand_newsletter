@@ -21,7 +21,6 @@ from urllib.parse import quote_plus, urlsplit, urlunsplit
 import feedparser
 import requests
 import yaml
-from anthropic import Anthropic
 
 CONFIG_PATH = Path("config.yaml")
 HISTORY_PATH = Path("history.json")
