@@ -3,8 +3,8 @@ name: AI Demand Monitoring
 on:
   workflow_dispatch:
   schedule:
-    # Monday and Thursday 08:00 KST
-    # Sunday and Wednesday 23:00 UTC
+    # 월요일·목요일 오전 8시 KST
+    # 일요일·수요일 오후 11시 UTC
     - cron: "0 23 * * 0,3"
 
 permissions:
@@ -21,10 +21,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Restore deduplication history
-        uses: actions/cache/restore@v4
+      - name: Restore history cache
+        id: history-cache
+        uses: actions/cache@v4
         with:
           path: history.json
           key: ai-demand-history-${{ github.run_id }}
@@ -39,13 +40,15 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run newsletter
         env:
@@ -57,10 +60,3 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: python news.py
-
-      - name: Save deduplication history
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: history.json
-          key: ai-demand-history-${{ github.run_id }}
