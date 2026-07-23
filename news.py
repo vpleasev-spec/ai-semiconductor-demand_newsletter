@@ -156,42 +156,10 @@ def summarize(config: dict[str, Any], articles: list[Article]) -> str:
     if not articles:
         return "이번 실행에서 새롭게 확인된 기사가 없습니다."
 
-    client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    summary_config = config.get("summary", {})
-    model = summary_config.get("model", "claude-3-5-haiku-latest")
-    max_tokens = int(summary_config.get("max_tokens", 1200))
-
-    article_lines = "\n".join(
-        f"- [{a.category} / {a.topic}] {a.title} | {a.source} | "
-        f"{a.published.astimezone(KST).strftime('%Y-%m-%d %H:%M KST')}"
-        for a in articles
+    return (
+        f"이번 모니터링에서 신규 기사 {len(articles)}건을 수집했습니다.\n\n"
+        "아래에서 카테고리별 기사 제목과 출처를 확인할 수 있습니다."
     )
-    prompt = f"""
-다음 기사 목록만 근거로 한국어 경영진 브리핑을 작성하세요.
-
-규칙:
-- 먼저 전체 핵심 변화 3~6개를 제시합니다.
-- 이어서 수요, 플랫폼, 인프라 및 환경 순으로 분석합니다.
-- 수요·공급·가격·투자·리스크 변화를 중심으로 설명합니다.
-- 확인되지 않은 숫자나 사실을 만들지 않습니다.
-- 상충하는 신호가 있으면 명시합니다.
-- 마지막에 관찰 포인트를 최대 3개 제시합니다.
-- 전체 분량은 약 700~1,200자입니다.
-
-기사 목록:
-{article_lines}
-""".strip()
-
-    response = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        temperature=0.2,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return "\n".join(
-        block.text for block in response.content
-        if getattr(block, "type", "") == "text"
-    ).strip()
 
 
 def build_bodies(config: dict[str, Any], summary: str, articles: list[Article]) -> tuple[str, str]:
@@ -269,9 +237,6 @@ def send_email(config: dict[str, Any], html_body: str, text_body: str) -> None:
 
 def main() -> int:
     try:
-        if not os.getenv("ANTHROPIC_API_KEY"):
-            raise RuntimeError("ANTHROPIC_API_KEY is not configured.")
-
         config = load_config()
         history = load_history()
         articles = collect(config, set(history))
@@ -288,6 +253,10 @@ def main() -> int:
     except Exception as error:
         logger.exception("Execution failed: %s", error)
         return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
 
 if __name__ == "__main__":
