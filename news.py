@@ -28,7 +28,7 @@ HISTORY_PATH = Path("history.json")
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
 USER_AGENT = "AI-Demand-Monitoring/2.0"
 KST = timezone(timedelta(hours=9))
-TEMPLATE_VERSION = "AIM-648-v5"
+TEMPLATE_VERSION = "AIM-648-grouped-v6"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("ai-demand-monitoring")
@@ -286,46 +286,171 @@ def build_bodies(
     masthead_enabled = bool(masthead.get("enabled", True))
 
     # Keep the newsletter masthead fixed to the requested name.
-    # This prevents any older config value from changing the visible title.
     masthead_title = "AI Demand Monitoring"
-
     generated = datetime.now(KST).strftime("%Y-%m-%d %H:%M KST")
 
-    toc_rows: list[str] = []
-    article_blocks: list[str] = []
+    # Fixed classification structure and display order.
+    category_structure = [
+        (
+            "1. 수요",
+            [
+                ("1-1. AI 토큰 사용량", "AI 토큰 사용량"),
+                ("1-2. AI 모델 업체 실적 전망", "AI 모델 업체 실적 전망"),
+                ("1-3. 신규 AI 모델 출시", "신규 AI 모델 출시"),
+            ],
+        ),
+        (
+            "2. 플랫폼",
+            [
+                ("2-1. Hyperscaler CapEx / FCF", "Hyperscaler CapEx / FCF"),
+                ("2-2. Hyperscaler 신용등급", "Hyperscaler 신용등급"),
+            ],
+        ),
+        (
+            "3. 인프라 및 환경",
+            [
+                ("3-1. 전력 수급", "전력 수급"),
+                ("3-2. 메모리(HBM/DRAM/NAND) 수급", "메모리(HBM/DRAM/NAND) 수급"),
+            ],
+        ),
+    ]
 
-    for index, article in enumerate(articles, start=1):
-        anchor = f"article-{index:03d}"
-        source = display_source(config, article)
-        heading = f"[{source}]{article.title}"
-        published = article.published.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
+    # Group collected articles by their configured topic name.
+    grouped: dict[str, list[Article]] = {}
+    for article in articles:
+        grouped.setdefault(article.topic.strip(), []).append(article)
 
-        toc_rows.append(
-            '<tr>'
-            '<td style="width:38px;padding:5px 0;vertical-align:top;color:#6b7280;">'
-            f"{index:02d}"
-            "</td>"
-            '<td style="padding:5px 0;vertical-align:top;">'
-            f'<a href="#{anchor}" style="color:#1155cc;text-decoration:none;">'
-            f"{html.escape(heading)}</a>"
-            "</td>"
-            "</tr>"
+    for topic_articles in grouped.values():
+        topic_articles.sort(key=lambda item: item.published, reverse=True)
+
+    toc_sections: list[str] = []
+    body_sections: list[str] = []
+    text_lines: list[str] = [
+        masthead_title if masthead_enabled else project_title,
+        project_title,
+        generated,
+        "",
+        summary,
+        "",
+        "뉴스 목차",
+    ]
+
+    article_index = 1
+
+    for category_title, topics in category_structure:
+        toc_topic_rows: list[str] = []
+        body_topic_sections: list[str] = []
+
+        text_lines.extend(["", category_title])
+
+        for topic_display, topic_key in topics:
+            topic_articles = grouped.get(topic_key, [])
+
+            toc_article_rows: list[str] = []
+            body_article_blocks: list[str] = []
+
+            text_lines.append(topic_display)
+
+            for article in topic_articles:
+                anchor = f"article-{article_index:03d}"
+                source = display_source(config, article)
+                heading = f"[{source}]{article.title}"
+                published = article.published.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
+                description = article.description or "RSS에 별도 기사 요약이 제공되지 않았습니다."
+
+                toc_article_rows.append(
+                    '<tr>'
+                    '<td style="width:38px;padding:4px 0 4px 18px;vertical-align:top;'
+                    'color:#6b7280;font-size:10pt;">'
+                    f"{article_index:02d}"
+                    "</td>"
+                    '<td style="padding:4px 0;vertical-align:top;">'
+                    f'<a href="#{anchor}" style="color:#1155cc;text-decoration:none;">'
+                    f"{html.escape(heading)}</a>"
+                    "</td>"
+                    "</tr>"
+                )
+
+                body_article_blocks.append(
+                    f'<div id="{anchor}" style="margin:0 0 14px 0;padding:0;">'
+                    f'<div style="margin:0;font-weight:700;">'
+                    f'<a href="{html.escape(article.url, quote=True)}" '
+                    'style="color:#1155cc;text-decoration:none;">'
+                    f"{html.escape(heading)}</a>"
+                    "</div>"
+                    f'<div style="margin:0;color:#6b7280;font-size:10pt;">'
+                    f"{published}"
+                    "</div>"
+                    f'<div style="margin:0;">{html.escape(description)}</div>'
+                    "</div>"
+                )
+
+                text_lines.extend(
+                    [
+                        heading,
+                        published,
+                        description,
+                        article.url,
+                        "",
+                    ]
+                )
+                article_index += 1
+
+            if toc_article_rows:
+                toc_articles_html = (
+                    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" '
+                    'border="0" style="width:100%;border-collapse:collapse;">'
+                    f"{''.join(toc_article_rows)}"
+                    "</table>"
+                )
+            else:
+                toc_articles_html = (
+                    '<div style="padding:3px 0 5px 18px;color:#9ca3af;font-size:10pt;">'
+                    "해당 기간 신규 기사 없음"
+                    "</div>"
+                )
+
+            toc_topic_rows.append(
+                '<div style="margin:7px 0 0 0;">'
+                f'<div style="font-weight:700;">{html.escape(topic_display)}</div>'
+                f"{toc_articles_html}"
+                "</div>"
+            )
+
+            if body_article_blocks:
+                body_articles_html = "".join(body_article_blocks)
+            else:
+                body_articles_html = (
+                    '<div style="margin:0;color:#9ca3af;">해당 기간 신규 기사 없음</div>'
+                )
+
+            body_topic_sections.append(
+                '<div style="margin:0 0 20px 0;">'
+                f'<div style="margin:0 0 8px 0;padding:7px 10px;background:#eef3f8;'
+                'border-left:4px solid #5b9bd5;font-weight:700;">'
+                f"{html.escape(topic_display)}"
+                "</div>"
+                f"{body_articles_html}"
+                "</div>"
+            )
+
+        toc_sections.append(
+            '<div style="margin:0 0 15px 0;">'
+            f'<div style="margin:0 0 5px 0;padding:7px 10px;background:#d9e6f2;'
+            'font-weight:700;font-size:12pt;">'
+            f"{html.escape(category_title)}"
+            "</div>"
+            f"{''.join(toc_topic_rows)}"
+            "</div>"
         )
 
-        description = article.description or "RSS에 별도 기사 요약이 제공되지 않았습니다."
-
-        article_blocks.append(
-            f'<div id="{anchor}" style="margin:0 0 16px 0;padding:0 0 14px 0;'
-            'border-bottom:1px solid #d1d5db;">'
-            f'<div style="margin:0;font-weight:700;">'
-            f'<a href="{html.escape(article.url, quote=True)}" '
-            'style="color:#1155cc;text-decoration:none;">'
-            f"{html.escape(heading)}</a>"
+        body_sections.append(
+            '<div style="margin:0 0 26px 0;">'
+            f'<div style="margin:0 0 12px 0;padding:9px 12px;background:#17365d;'
+            'color:#ffffff;font-weight:700;font-size:13pt;">'
+            f"{html.escape(category_title)}"
             "</div>"
-            f'<div style="margin:0;color:#6b7280;font-size:10pt;">'
-            f"{html.escape(article.category)} · {html.escape(article.topic)} · {published}"
-            "</div>"
-            f'<div style="margin:0;">{html.escape(description)}</div>'
+            f"{''.join(body_topic_sections)}"
             "</div>"
         )
 
@@ -344,21 +469,12 @@ def build_bodies(
     else:
         masthead_html = ""
 
-    toc_html = ""
-    if toc_rows:
-        toc_html = (
-            '<div style="margin:18px 0 22px 0;padding:14px 18px;background:#f3f4f6;'
-            'border:1px solid #d1d5db;">'
-            '<div style="margin:0 0 7px 0;font-weight:700;font-size:13pt;">뉴스 목차</div>'
-            '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" '
-            'style="width:100%;border-collapse:collapse;">'
-            f"{''.join(toc_rows)}"
-            "</table>"
-            "</div>"
-        )
-
-    body_html = "".join(article_blocks) if article_blocks else (
-        '<div style="margin:18px 0;">새로운 기사가 없습니다.</div>'
+    toc_html = (
+        '<div style="margin:18px 0 22px 0;padding:14px 18px;background:#f3f4f6;'
+        'border:1px solid #d1d5db;">'
+        '<div style="margin:0 0 10px 0;font-weight:700;font-size:13pt;">뉴스 목차</div>'
+        f"{''.join(toc_sections)}"
+        "</div>"
     )
 
     html_body = (
@@ -382,8 +498,8 @@ def build_bodies(
         f"{html.escape(summary)}"
         "</div>"
         f"{toc_html}"
-        '<div style="margin:0 0 10px 0;font-weight:700;font-size:13pt;">기사 본문</div>'
-        f"{body_html}"
+        '<div style="margin:0 0 12px 0;font-weight:700;font-size:13pt;">기사 본문</div>'
+        f"{''.join(body_sections)}"
         '<div style="margin-top:18px;padding-top:10px;border-top:1px solid #d1d5db;'
         'color:#9ca3af;font-size:9pt;text-align:right;">'
         f"Template: {TEMPLATE_VERSION}"
@@ -394,38 +510,8 @@ def build_bodies(
         "</body></html>"
     )
 
-    text_lines = [
-        masthead_title if masthead_enabled else project_title,
-        project_title,
-        generated,
-        "",
-        summary,
-        "",
-        "뉴스 목차",
-    ]
-
-    for article in articles:
-        source = display_source(config, article)
-        text_lines.append(f"[{source}]{article.title}")
-
-    text_lines.extend(["", "기사 본문"])
-
-    for article in articles:
-        source = display_source(config, article)
-        text_lines.extend(
-            [
-                f"[{source}]{article.title}",
-                f"{article.category} · {article.topic} · "
-                f"{article.published.astimezone(KST).strftime('%Y-%m-%d %H:%M KST')}",
-                article.description or "RSS에 별도 기사 요약이 제공되지 않았습니다.",
-                article.url,
-                "",
-            ]
-        )
-
     text_lines.append(f"Template: {TEMPLATE_VERSION}")
     return html_body, "\n".join(text_lines).rstrip()
-
 
 def send_email(config: dict[str, Any], html_body: str, text_body: str) -> None:
     required = [
