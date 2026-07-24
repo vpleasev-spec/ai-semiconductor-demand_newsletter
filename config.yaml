@@ -1,10 +1,29 @@
+masthead:
+  enabled: true
+  title: "DS Intelligence"
+
+source_names:
+  ft.com: "FT"
+  Financial Times: "FT"
+  digitimes.com: "Digitimes"
+  DIGITIMES: "Digitimes"
+  reuters.com: "Reuters"
+  Reuters: "Reuters"
+  bloomberg.com: "Bloomberg"
+  Bloomberg: "Bloomberg"
+  wsj.com: "WSJ"
+  The Wall Street Journal: "WSJ"
+  
 project:
   title: "AI Demand Monitoring"
+  dedup_similarity: 0.80
+  title_history_limit: 1000
   language: "ko"
   lookback_hours: 96
   max_articles_per_topic: 5
   max_total_articles: 40
   history_limit: 3000
+  
 
 summary:
   model: "claude-3-5-haiku-latest"
