@@ -5,7 +5,8 @@ on:
   schedule:
     # 월요일·목요일 오전 8시 KST
     # 일요일·수요일 오후 11시 UTC
-    - cron: "0 23 * * 0,3"
+    - cron: "0 8 * * 1,4"
+      timezone: "Asia/Seoul"
 
 permissions:
   contents: read
