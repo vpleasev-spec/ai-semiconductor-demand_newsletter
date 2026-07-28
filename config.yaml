@@ -44,9 +44,16 @@ categories:
           - '(OpenAI OR Anthropic OR xAI OR Cohere) AND (revenue OR forecast OR earnings OR outlook)'
           - '"AI model company" AND (revenue OR profitability OR funding)'
       - name: "신규 AI 모델 출시"
-        queries:
-          - '"new AI model" OR "model launch" OR "foundation model release"'
-          - '(OpenAI OR Anthropic OR Google DeepMind OR Meta OR xAI) AND (launch OR release OR unveil)'
+         queries:
+           - '"new AI model" OR "new language model" OR "new foundation model"'
+           - '"AI model release" OR "LLM release" OR "multimodal model release"'
+           - '"launches AI model" OR "unveils AI model"'
+           - '"GPT" OR "Gemini" OR "Claude" OR "Llama" OR "Mistral" new model'
+           - '"AI model" OR "language model" OR LLM'
+    - '"foundation model" OR "reasoning model" OR "multimodal model"'
+    - '"GPT" OR "Gemini" OR "Claude" OR "Llama"'
+    - '"DeepSeek" OR "Qwen" OR "Kimi" OR "GLM"'
+    - '"MiniMax" OR "Doubao" OR "ERNIE" OR "Hunyuan"'
 
   - name: "플랫폼"
     topics:
