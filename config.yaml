@@ -50,10 +50,10 @@ categories:
            - '"launches AI model" OR "unveils AI model"'
            - '"GPT" OR "Gemini" OR "Claude" OR "Llama" OR "Mistral" new model'
            - '"AI model" OR "language model" OR LLM'
-    - '"foundation model" OR "reasoning model" OR "multimodal model"'
-    - '"GPT" OR "Gemini" OR "Claude" OR "Llama"'
-    - '"DeepSeek" OR "Qwen" OR "Kimi" OR "GLM"'
-    - '"MiniMax" OR "Doubao" OR "ERNIE" OR "Hunyuan"'
+           - '"foundation model" OR "reasoning model" OR "multimodal model"'
+           - '"GPT" OR "Gemini" OR "Claude" OR "Llama"'
+           - '"DeepSeek" OR "Qwen" OR "Kimi" OR "GLM"'
+           - '"MiniMax" OR "Doubao" OR "ERNIE" OR "Hunyuan"'
 
   - name: "플랫폼"
     topics:
